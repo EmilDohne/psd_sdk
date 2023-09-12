@@ -213,6 +213,7 @@ namespace
 static std::wstring GetSampleInputPath(void)
 {
 	// TODO: add support for other platforms
+	// This by default doesnt work if you run the executable, would need to be L"../../../../bin/"
 //#ifdef _WIN32
 	return L"../../bin/";
 //#endif
@@ -224,6 +225,7 @@ static std::wstring GetSampleInputPath(void)
 static std::wstring GetSampleOutputPath(void)
 {
 	// TODO: add support for other platforms
+	// This by default doesnt work if you run the executable, would need to be L"../../../../bin/"
 //#ifdef _WIN32
 	return L"../../bin/";
 //#endif
@@ -826,6 +828,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 int main(int argc, const char * argv[])
 #endif
 {
+	UNREFERENCED_PARAMETER(argc);
+	UNREFERENCED_PARAMETER(argv);
 	{
 		const int result = SampleReadPsd();
 		if (result != 0)
