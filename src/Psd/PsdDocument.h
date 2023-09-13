@@ -14,6 +14,8 @@ PSD_NAMESPACE_BEGIN
 /// \sa Section
 struct Document
 {
+	uint16_t version;							///< The version of the document, 1 for PSD, 2 for PSB
+
 	unsigned int width;							///< The width of the document.
 	unsigned int height;						///< The height of the document.
 	unsigned int channelCount;					///< The number of channels stored in the document, including any additional alpha channels.

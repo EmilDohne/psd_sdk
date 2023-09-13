@@ -34,14 +34,12 @@ Document* CreateDocument(File* file, Allocator* allocator)
 		}
 	}
 
-	// check version, must be 1
+	// check version, must be 1 for PSD or 2 for PSB
+	const uint16_t version = fileUtil::ReadFromFileBE<uint16_t>(reader);
+	if (version != 1 && version != 2)
 	{
-		const uint16_t version = fileUtil::ReadFromFileBE<uint16_t>(reader);
-		if (version != 1)
-		{
-			PSD_ERROR("PsdExtract", "File seems to be corrupt, version does not match 1.");
-			return nullptr;
-		}
+		PSD_ERROR("PsdExtract", "File seems to be corrupt, version does not match 1 or 2.");
+		return nullptr;
 	}
 
 	// check reserved bytes, must be zero
@@ -58,6 +56,9 @@ Document* CreateDocument(File* file, Allocator* allocator)
 	}
 
 	Document* document = memoryUtil::Allocate<Document>(allocator);
+
+	// Set the version we grabbed earlier, this will allow for further parsing of PSD/PSB
+	document->version = version;
 
 	// read in the number of channels.
 	// this is the number of channels contained in the document for all layers, including any alpha channels.
