@@ -20,7 +20,7 @@ SyncFileReader::SyncFileReader(File* file)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-void SyncFileReader::Read(void* buffer, uint32_t count)
+void SyncFileReader::Read(void* buffer, uint64_t count)
 {
 	// do an asynchronous read, wait until it's finished, and update the file position
 	File::ReadOperation op = m_file->Read(buffer, count, m_position);

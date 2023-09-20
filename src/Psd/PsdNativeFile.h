@@ -22,7 +22,7 @@ private:
 	virtual bool DoOpenWrite(const wchar_t* filename) PSD_OVERRIDE;
 	virtual bool DoClose(void) PSD_OVERRIDE;
 
-	virtual File::ReadOperation DoRead(void* buffer, uint32_t count, uint64_t position) PSD_OVERRIDE;
+	virtual File::ReadOperation DoRead(void* buffer, uint64_t count, uint64_t position) PSD_OVERRIDE;
 	virtual bool DoWaitForRead(File::ReadOperation& operation) PSD_OVERRIDE;
 
 	virtual File::WriteOperation DoWrite(const void* buffer, uint32_t count, uint64_t position) PSD_OVERRIDE;

@@ -78,7 +78,7 @@ Document* CreateDocument(File* file, Allocator* allocator)
 		const uint32_t length = fileUtil::ReadFromFileBE<uint32_t>(reader);
 
 		document->colorModeDataSection.offset = reader.GetPosition();
-		document->colorModeDataSection.length = length;
+		document->colorModeDataSection.length = static_cast<uint64_t>(length);
 
 		reader.Skip(length);
 	}
@@ -86,22 +86,32 @@ Document* CreateDocument(File* file, Allocator* allocator)
 		const uint32_t length = fileUtil::ReadFromFileBE<uint32_t>(reader);
 
 		document->imageResourcesSection.offset = reader.GetPosition();
-		document->imageResourcesSection.length = length;
+		document->imageResourcesSection.length = static_cast<uint64_t>(length);
 
 		reader.Skip(length);
 	}
 	{
-		const uint32_t length = fileUtil::ReadFromFileBE<uint32_t>(reader);
-
 		document->layerMaskInfoSection.offset = reader.GetPosition();
-		document->layerMaskInfoSection.length = length;
 
+
+		uint64_t length = 0;
+		// For PSBs the length marker is 8 bytes instead of 4
+		if (document->version == 1)
+		{
+			length = static_cast<uint64_t>(fileUtil::ReadFromFileBE<uint32_t>(reader));
+		}
+		else if (document->version == 2)
+		{
+			length = fileUtil::ReadFromFileBE<uint64_t>(reader);
+		}
+
+		document->layerMaskInfoSection.length = length;
 		reader.Skip(length);
 	}
 	{
 		// note that the image data section does NOT store its length in the first 4 bytes
 		document->imageDataSection.offset = reader.GetPosition();
-		document->imageDataSection.length = static_cast<uint32_t>(file->GetSize() - reader.GetPosition());
+		document->imageDataSection.length = file->GetSize() - reader.GetPosition();	
 	}
 
 	return document;

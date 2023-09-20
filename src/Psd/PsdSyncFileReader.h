@@ -23,7 +23,7 @@ public:
 	explicit SyncFileReader(File* file);
 
 	/// Reads \a count bytes into \a buffer synchronously, incrementing the internal read position.
-	void Read(void* buffer, uint32_t count);
+	void Read(void* buffer, uint64_t count);
 
 	/// Skips \a count bytes.
 	void Skip(uint64_t count);

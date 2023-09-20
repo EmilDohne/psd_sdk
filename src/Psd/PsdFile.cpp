@@ -54,7 +54,7 @@ bool File::Close(void)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-File::ReadOperation File::Read(void* buffer, uint32_t count, uint64_t position)
+File::ReadOperation File::Read(void* buffer, uint64_t count, uint64_t position)
 {
 	PSD_ASSERT_NOT_NULL(buffer);
 

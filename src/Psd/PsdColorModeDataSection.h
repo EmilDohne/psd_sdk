@@ -12,7 +12,7 @@ PSD_NAMESPACE_BEGIN
 struct ColorModeDataSection
 {
 	uint8_t* colorData;
-	uint32_t sizeOfColorData;
+	uint64_t sizeOfColorData;
 };
 
 PSD_NAMESPACE_END
