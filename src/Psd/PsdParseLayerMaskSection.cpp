@@ -938,6 +938,7 @@ LayerMaskSection* ParseLayerMaskSection(const Document* document, File* file, Al
 	{
 		layerInfoSectionLength = fileUtil::ReadFromFileBE<uint64_t>(reader);
 	}
+
 	LayerMaskSection* layerMaskSection = ParseLayer(document, reader, allocator, section.offset, section.length, layerInfoSectionLength);
 
 	// build the layer hierarchy

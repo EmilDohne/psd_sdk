@@ -91,9 +91,6 @@ Document* CreateDocument(File* file, Allocator* allocator)
 		reader.Skip(length);
 	}
 	{
-		document->layerMaskInfoSection.offset = reader.GetPosition();
-
-
 		uint64_t length = 0;
 		// For PSBs the length marker is 8 bytes instead of 4
 		if (document->version == 1)
@@ -105,6 +102,7 @@ Document* CreateDocument(File* file, Allocator* allocator)
 			length = fileUtil::ReadFromFileBE<uint64_t>(reader);
 		}
 
+		document->layerMaskInfoSection.offset = reader.GetPosition();
 		document->layerMaskInfoSection.length = length;
 		reader.Skip(length);
 	}
