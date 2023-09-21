@@ -70,17 +70,8 @@ bool NativeFile::DoClose(void)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-File::ReadOperation NativeFile::DoRead(void* buffer, uint64_t count, uint64_t position)
+File::ReadOperation NativeFile::DoRead(void* buffer, uint32_t count, uint64_t position)
 {
-	// TODO split the read into high and low as with offset
-	if (count > static_cast<uint64_t>(std::numeric_limits<DWORD>::max()))
-	{
-		// Handle the error condition here, e.g., return an error code or throw an exception.
-		PSD_ERROR("NativeFile", "Read count exceeds the maximum value representable by a DWORD.");
-
-		return nullptr;
-	}
-
 	OVERLAPPED* operation = memoryUtil::Allocate<OVERLAPPED>(m_allocator);
 	operation->hEvent = nullptr;
 	operation->Offset = static_cast<DWORD>(position & 0xFFFFFFFFull);
@@ -90,7 +81,7 @@ File::ReadOperation NativeFile::DoRead(void* buffer, uint64_t count, uint64_t po
 	const BOOL success = ::ReadFile(m_file, buffer, static_cast<DWORD>(count), &bytesRead, operation);
 	if ((success == 0) && (::GetLastError() != ERROR_IO_PENDING))
 	{
-		PSD_ERROR("NativeFile", "Cannot read %" PRIu64 "bytes from file position %" PRIu64 " asynchronously.", count, position);
+		PSD_ERROR("NativeFile", "Cannot read %d bytes from file position %" PRIu64 " asynchronously.", count, position);
 
 		// the read operation failed, so don't return a useful object here
 		memoryUtil::Free(m_allocator, operation);

@@ -43,7 +43,7 @@ public:
 
 	/// Asynchronously loads count bytes into the buffer, reading from position in the file.
 	/// The returned ReadOperation must be used in a call to WaitForRead() in order to free resources associated with it.
-	ReadOperation Read(void* buffer, uint64_t count, uint64_t position);
+	ReadOperation Read(void* buffer, uint32_t count, uint64_t position);
 
 	/// Waits until the read operation associated with the given object is finished, and deletes its internal resources.
 	bool WaitForRead(ReadOperation& operation);
@@ -67,7 +67,7 @@ private:
 	virtual bool DoOpenWrite(const wchar_t* filename) PSD_ABSTRACT;
 	virtual bool DoClose(void) PSD_ABSTRACT;
 
-	virtual ReadOperation DoRead(void* buffer, uint64_t count, uint64_t position) PSD_ABSTRACT;
+	virtual ReadOperation DoRead(void* buffer, uint32_t count, uint64_t position) PSD_ABSTRACT;
 	virtual bool DoWaitForRead(ReadOperation& operation) PSD_ABSTRACT;
 
 	virtual WriteOperation DoWrite(const void* buffer, uint32_t count, uint64_t position) PSD_ABSTRACT;

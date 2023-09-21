@@ -263,7 +263,7 @@ namespace
 	template <typename T>
 	static void* ReadChannelDataRaw(SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height)
 	{
-		const unsigned int size = width*height;
+		const uint64_t size = width*height;
 		if (size > 0)
 		{
 			void* planarData = allocator->Allocate(size*sizeof(T), 16u);
@@ -284,7 +284,7 @@ namespace
 	static void* ReadChannelDataRLE(const Document* document, SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height)
 	{
 		// the RLE-compressed data is preceded by a 2/4-byte data count for each scan line depending on which version it is
-		const unsigned int size = width*height;
+		const uint64_t size = width*height;
 
 		unsigned int rleDataSize = 0u;
 		for (unsigned int i=0; i < height; ++i)
@@ -329,7 +329,7 @@ namespace
 	{
 		if (channelSize > 0)
 		{
-			const unsigned int size = width*height;
+			const uint64_t size = width*height;
 
 			T* planarData = static_cast<T*>(allocator->Allocate(size*sizeof(T), 16));
 
@@ -475,7 +475,7 @@ namespace
 	{
 		if (channelSize > 0)
 		{
-			const unsigned int size = width*height;
+			const uint64_t size = width*height;
 
 			T* planarData = static_cast<T*>(allocator->Allocate(size*sizeof(T), 16));
 
