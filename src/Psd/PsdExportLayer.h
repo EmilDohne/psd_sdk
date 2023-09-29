@@ -11,6 +11,9 @@ PSD_NAMESPACE_BEGIN
 /// \brief A struct representing a layer as exported to the Layer Mask section.
 struct ExportLayer
 {
+	ExportGroup* parent = nullptr;
+	ExportLayerMask parent;
+
 	// the SDK currently supports R, G, B, A
 	static const unsigned int MAX_CHANNEL_COUNT = 4u;
 

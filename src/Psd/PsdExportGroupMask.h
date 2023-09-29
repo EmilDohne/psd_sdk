@@ -1,0 +1,28 @@
+// Copyright 2011-2020, Molecular Matters GmbH <office@molecular-matters.com>
+// See LICENSE.txt for licensing details (2-clause BSD License: https://opensource.org/licenses/BSD-2-Clause)
+
+#pragma once
+
+
+PSD_NAMESPACE_BEGIN
+
+/// \ingroup Types
+/// \class ExportGroupMask
+/// \brief A struct representing a group mask as stored in the layers of the Layer Mask section.
+struct ExportGroupMask
+{
+	ExportGroup* parent;			///< Reference to the group that is masked
+
+	int32_t top;					///< Top coordinate of the rectangle that encloses the mask.
+	int32_t left;					///< Left coordinate of the rectangle that encloses the mask.
+	int32_t bottom;					///< Bottom coordinate of the rectangle that encloses the mask.
+	int32_t right;					///< Right coordinate of the rectangle that encloses the mask.
+
+	void* data;						///< Planar data, having a size of (right-left)*(bottom-top)*bytesPerPixel.
+
+	float64_t feather;				///< The mask's feather value.
+	uint8_t density;				///< The mask's density value.
+	uint8_t defaultColor;			///< The mask's default color regions outside the enclosing rectangle.
+};
+
+PSD_NAMESPACE_END
