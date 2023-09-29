@@ -16,6 +16,8 @@
 #include "PsdMemoryUtil.h"
 #include "PsdAllocator.h"
 #include "PsdLog.h"
+#include "Psdinttypes.h"
+
 
 
 PSD_NAMESPACE_BEGIN
@@ -120,7 +122,19 @@ ImageResourcesSection* ParseImageResourcesSection(const Document* document, File
 			case imageResource::MULTICHANNEL_HALFTONING_INFO:
 			case imageResource::MULTICHANNEL_TRANSFER_FUNCTIONS:
 			case imageResource::LAYER_STATE_INFORMATION:
+				// we are currently not interested in this resource
+				break;
 			case imageResource::LAYER_GROUP_INFORMATION:
+			{
+				uint32_t toRead = resourceSize;
+				while (toRead > 0)
+				{
+					const uint16_t groupId = fileUtil::ReadFromFileBE<uint16_t>(reader);
+					PSD_UNUSED(groupId);
+					toRead -= 2;
+				}
+				break;
+			}
 			case imageResource::LAYER_GROUP_ENABLED_ID:
 			case imageResource::LAYER_SELECTION_ID:
 			case imageResource::GRID_GUIDES_INFO:
