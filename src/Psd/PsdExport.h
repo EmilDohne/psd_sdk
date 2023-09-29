@@ -7,6 +7,10 @@
 #include "PsdExportChannel.h"
 #include "PsdCompressionType.h"
 #include "PsdAlphaChannel.h"
+#include "PsdExportLayer.h"
+#include "PsdExportLayerMask.h"
+#include "PsdExportGroup.h"
+#include "PsdExportGroupMask.h"
 
 
 PSD_NAMESPACE_BEGIN
@@ -47,7 +51,6 @@ void SetEXIFData(ExportDocument* document, Allocator* allocator, void* rawExifDa
 /// \ingroup Exporter
 /// Sets the JPEG thumbnail of a document. The contents of \a rawJpegData are copied.
 void SetJpegThumbnail(ExportDocument* document, Allocator* allocator, uint32_t width, uint32_t height, void* rawJpegData, uint32_t size);
-
 
 /// \ingroup Exporter
 /// Adds a layer to a document. The returned index can be used to update layer data by a call to \ref UpdateLayer.
@@ -101,8 +104,23 @@ void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* pa
 /// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
 void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const float32_t* planarData, compressionType::Enum compression);
 
-
+/// \ingroup Exporter
+/// Updates a layer mask with planar 8-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that masks can be smaller and/or larger than the canvas in PSD documents.
 void UpdateMask(ExportLayer* parent, int left, int top, int right, int bottom, const uint8_t* planarData);
+
+/// \ingroup Exporter
+/// Updates a layer mask with planar 16-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height*2" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that masks can be smaller and/or larger than the canvas in PSD documents.
+void UpdateMask(ExportLayer* parent, int left, int top, int right, int bottom, const uint16_t* planarData);
+
+/// \ingroup Exporter
+/// Updates a layer mask with planar 32-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height*4" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that masks can be smaller and/or larger than the canvas in PSD documents.
+void UpdateMask(ExportLayer* parent, int left, int top, int right, int bottom, const float32_t* planarData);
 
 /// \ingroup Exporter
 /// Adds an alpha channel to a document. The returned index can be used to update channel data by a call to \ref UpdateChannel.

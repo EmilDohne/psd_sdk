@@ -658,9 +658,9 @@ int SampleReadPsd(void)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-int SampleReadPsdGroup(void)
+int SampleReadPsb(void)
 {
-	const std::wstring srcPath = GetSampleInputPath() + L"Sample_Groups.psd";
+	const std::wstring srcPath = GetSampleInputPath() + L"Sample.psb";
 
 	MallocAllocator allocator;
 	NativeFile file(&allocator);

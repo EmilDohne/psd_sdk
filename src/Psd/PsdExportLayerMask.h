@@ -3,7 +3,6 @@
 
 #pragma once
 
-
 PSD_NAMESPACE_BEGIN
 
 /// \ingroup Types
