@@ -347,7 +347,10 @@
     <ClInclude Include="..\..\src\Psd\PsdExportChannel.h" />
     <ClInclude Include="..\..\src\Psd\PsdExportColorMode.h" />
     <ClInclude Include="..\..\src\Psd\PsdExportDocument.h" />
+    <ClInclude Include="..\..\src\Psd\PsdExportGroup.h" />
+    <ClInclude Include="..\..\src\Psd\PsdExportGroupMask.h" />
     <ClInclude Include="..\..\src\Psd\PsdExportLayer.h" />
+    <ClInclude Include="..\..\src\Psd\PsdExportLayerMask.h" />
     <ClInclude Include="..\..\src\Psd\PsdExportMetaDataAttribute.h" />
     <ClInclude Include="..\..\src\Psd\Psdinttypes.h" />
     <ClInclude Include="..\..\src\Psd\Psdispod.h" />

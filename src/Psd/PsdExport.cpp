@@ -480,6 +480,7 @@ void SetJpegThumbnail(ExportDocument* document, Allocator* allocator, uint32_t w
 // ---------------------------------------------------------------------------------------------------------------------
 unsigned int AddLayer(ExportDocument* document, Allocator* allocator, const char* name)
 {
+
 	const unsigned int index = document->layerCount;
 	++document->layerCount;
 
@@ -489,6 +490,44 @@ unsigned int AddLayer(ExportDocument* document, Allocator* allocator, const char
 	return index;
 }
 
+
+unsigned int AddLayer(ExportDocument* document, Allocator* allocator, const char* name, ExportGroup* parent)
+{
+	const unsigned int index = parent->layerCount;
+	++parent->layerCount;
+
+	ExportLayer* layer = *parent->childLayers + index;
+	layer->name = CreateString(allocator, name);
+	layer->parent = parent;
+
+	return index;
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+unsigned int AddGroup(ExportDocument* document, Allocator* allocator, const char* name)
+{
+	const unsigned int index = document->groupCount;
+	++document->groupCount;
+
+	ExportGroup* group = document->groups + index;
+	group->name = CreateString(allocator, name);
+
+	return index;
+}
+
+unsigned int AddGroup(ExportDocument* document, Allocator* allocator, const char* name, ExportGroup* parent)
+{
+	const unsigned int index = parent->groupCount;
+	++parent->groupCount;
+
+	ExportGroup* group = *parent->childGroups + index;
+	group->name = CreateString(allocator, name);
+	group->parent = parent;
+
+	return index;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
@@ -765,6 +804,101 @@ void UpdateLayer(ExportDocument* document, Allocator* allocator, unsigned int la
 void UpdateLayer(ExportDocument* document, Allocator* allocator, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const float32_t* planarData, compressionType::Enum compression)
 {
 	UpdateLayerImpl(document, allocator, layerIndex, channel, left, top, right, bottom, planarData, compression);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+template <typename T>
+void UpdateLayerImpl(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const T* planarData, compressionType::Enum compression)
+{
+	if (document->colorMode == exportColorMode::GRAYSCALE)
+	{
+		PSD_ASSERT((channel == exportChannel::GRAY) || (channel == exportChannel::ALPHA), "Wrong channel for this color mode.");
+	}
+	else if (document->colorMode == exportColorMode::RGB)
+	{
+		PSD_ASSERT((channel == exportChannel::RED) || (channel == exportChannel::GREEN) || (channel == exportChannel::BLUE) || (channel == exportChannel::ALPHA), "Wrong channel for this color mode.");
+	}
+
+	ExportLayer* layer = parent->childLayers + layerIndex;
+	const unsigned int channelIndex = GetChannelIndex(channel);
+
+	// free old data
+	{
+		void* data = layer->channelData[channelIndex];
+		if (data)
+		{
+			const uint16_t type = layer->channelCompression[channelIndex];
+			if ((type == compressionType::ZIP) ||
+				(type == compressionType::ZIP_WITH_PREDICTION))
+			{
+				// data was allocated by miniz
+				free(data);
+			}
+			else
+			{
+				memoryUtil::FreeArray(allocator, data);
+			}
+		}
+	}
+
+	// prepare new data
+	layer->top = top;
+	layer->left = left;
+	layer->bottom = bottom;
+	layer->right = right;
+	layer->channelCompression[channelIndex] = static_cast<uint16_t>(compression);
+
+	PSD_ASSERT(right >= left, "Invalid layer bounds.");
+	PSD_ASSERT(bottom >= top, "Invalid layer bounds.");
+	const uint32_t width = static_cast<uint32_t>(right - left);
+	const uint32_t height = static_cast<uint32_t>(bottom - top);
+
+	if (compression == compressionType::RAW)
+	{
+		// raw data, copy directly and convert to big endian
+		CreateDataRaw(allocator, layer, channelIndex, planarData, width, height);
+	}
+	else if (compression == compressionType::RLE)
+	{
+		// compress with RLE
+		CreateDataRLE(allocator, layer, channelIndex, planarData, width, height);
+	}
+	else if (compression == compressionType::ZIP)
+	{
+		// compress with ZIP
+		// note that this has a template specialization for 32-bit float data that forwards to ZipWithPrediction.
+		CreateDataZip(allocator, layer, channelIndex, planarData, width, height);
+	}
+	else if (compression == compressionType::ZIP_WITH_PREDICTION)
+	{
+		// delta-encode, then compress with ZIP
+		CreateDataZipPrediction(allocator, layer, channelIndex, planarData, width, height);
+	}
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const uint8_t* planarData, compressionType::Enum compression)
+{
+	UpdateLayerImpl(document, allocator, layerIndex, channel, left, top, right, bottom, planarData, compression);
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const uint16_t* planarData, compressionType::Enum compression)
+{
+	UpdateLayerImpl(document, allocator, layerIndex, channel, left, top, right, bottom, planarData, compression);
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const float32_t* planarData, compressionType::Enum compression)
+{
+	UpdateLayerImpl(document, allocator, parent, layerIndex, channel, left, top, right, bottom, planarData, compression);
 }
 
 

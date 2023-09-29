@@ -54,6 +54,18 @@ void SetJpegThumbnail(ExportDocument* document, Allocator* allocator, uint32_t w
 unsigned int AddLayer(ExportDocument* document, Allocator* allocator, const char* name);
 
 /// \ingroup Exporter
+/// Adds a layer to a parent group. The returned index can be used to update layer data by a call to \ref UpdateLayer.
+unsigned int AddLayer(ExportDocument* document, Allocator* allocator, const char* name, ExportGroup* parent);
+
+/// \ingroup Exporter
+/// Adds a group to a document. The returned index can be used to update group mask data by a call to \ref UpdateMask.
+unsigned int AddGroup(ExportDocument* document, Allocator* allocator, const char* name);
+
+/// \ingroup Exporter
+/// Adds a group to a parent group. The returned index can be used to update group mask data by a call to \ref UpdateMask.
+unsigned int AddGroup(ExportDocument* document, Allocator* allocator, const char* name, ExportGroup* parent);
+
+/// \ingroup Exporter
 /// Updates a layer with planar 8-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
 /// Planar data must hold "width*height" bytes, where width = \a right - \a left and height = \a botttom - \a top.
 /// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
@@ -71,6 +83,26 @@ void UpdateLayer(ExportDocument* document, Allocator* allocator, unsigned int la
 /// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
 void UpdateLayer(ExportDocument* document, Allocator* allocator, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const float32_t* planarData, compressionType::Enum compression);
 
+/// \ingroup Exporter
+/// Updates a layer parented under a group with planar 8-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const uint8_t* planarData, compressionType::Enum compression);
+
+/// \ingroup Exporter
+/// Updates a layer parented under a group with planar 16-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height*2" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const uint16_t* planarData, compressionType::Enum compression);
+
+/// \ingroup Exporter
+/// Updates a layer parented under a group with planar 32-bit data. The function internally takes ownership over all data, so planar image data passed to this function can be freed afterwards.
+/// Planar data must hold "width*height*4" bytes, where width = \a right - \a left and height = \a botttom - \a top.
+/// Note that individual layers can be smaller and/or larger than the canvas in PSD documents.
+void UpdateLayer(ExportDocument* document, Allocator* allocator, ExportGroup* parent, unsigned int layerIndex, exportChannel::Enum channel, int left, int top, int right, int bottom, const float32_t* planarData, compressionType::Enum compression);
+
+
+void UpdateMask(ExportLayer* parent, int left, int top, int right, int bottom, const uint8_t* planarData);
 
 /// \ingroup Exporter
 /// Adds an alpha channel to a document. The returned index can be used to update channel data by a call to \ref UpdateChannel.

@@ -59,3 +59,11 @@
 Implement the Layer Group information (tag 1026). These values apparently do not need to adhere to any standard, just that each unique group has a unique index as uint16_t. It is unclear how nested layers get treated, if the group id propagates down or not.
 
 The Layer Group Enabled ID (tag 1072) does not seem to be relevant anymore as can be seen by the [pytoshop](https://github.com/mdboom/pytoshop/) implementation not using it and nested layers work there. 
+
+Update --> This does not seem to be the case anymore and the tag 1026 is not used when saving from modern PS versions. What seems to determine layers is the `lsct` Key in the additional layer information section.
+
+PSD_SDK does already provide functionality for parsing this data when reading but not for write operations. Bonus: add examples of how to parse layered data in PSDSamples.cpp for read operations
+
+### Implementation ideas
+
+Specialize layers such that there is a `Layer` class but also a `Group` class to abstract away implementation details such as opening and closing a layer but rather having PSD_SDK handle this automatically

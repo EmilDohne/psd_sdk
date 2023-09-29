@@ -6,6 +6,9 @@
 #include "PsdExportColorMode.h"
 #include "PsdExportMetaDataAttribute.h"
 #include "PsdExportLayer.h"
+#include "PsdExportLayerMask.h"
+#include "PsdExportGroup.h"
+#include "PsdExportGroupMask.h"
 #include "PsdAlphaChannel.h"
 
 
@@ -18,6 +21,7 @@ struct Thumbnail;
 /// \brief A struct representing a document to be exported.
 struct ExportDocument
 {
+	// These are arbitrary limits and can be raised if required
 	static const unsigned int MAX_ATTRIBUTE_COUNT = 128u;
 	static const unsigned int MAX_LAYER_COUNT = 128u;
 	static const unsigned int MAX_ALPHA_CHANNEL_COUNT = 128u;
@@ -30,8 +34,13 @@ struct ExportDocument
 	ExportMetaDataAttribute attributes[MAX_ATTRIBUTE_COUNT];
 	unsigned int attributeCount;
 
+	// Only top-level (root) layers should be held in here
 	ExportLayer layers[MAX_LAYER_COUNT];
 	uint16_t layerCount;
+
+	// Only top-level (root) groups should be held in here
+	ExportGroup groups[MAX_LAYER_COUNT];
+	uint16_t groupCount;
 
 	void* mergedImageData[3u];
 

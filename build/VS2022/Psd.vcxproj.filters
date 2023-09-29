@@ -211,6 +211,15 @@
     <ClInclude Include="..\..\src\Psd\PsdSyncFileWriter.h">
       <Filter>Source Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Psd\PsdExportGroup.h">
+      <Filter>Source Files\Exporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Psd\PsdExportLayerMask.h">
+      <Filter>Source Files\Exporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Psd\PsdExportGroupMask.h">
+      <Filter>Source Files\Exporter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Psd\PsdPch.cpp">
