@@ -20,7 +20,7 @@ public:
 	virtual ~Allocator(void);
 
 	/// Allocates \a size bytes with a given \a alignment. The alignment must be a power-of-two.
-	void* Allocate(size_t size, size_t alignment);
+	void* Allocate(uint64_t size, size_t alignment);
 
 	/// Frees an allocation.
 	void Free(void* ptr);

@@ -57,10 +57,10 @@ namespace
 		// read data for all channels at once
 		for (unsigned int i=0; i < channelCount; ++i)
 		{
-			void* planarData = allocator->Allocate(size*bytesPerPixel, 16u);
+			void* planarData = allocator->Allocate(static_cast<uint64_t>(size)*bytesPerPixel, 16u);
 			imageData->images[i].data = planarData;
 
-			reader.Read(planarData, size*bytesPerPixel);
+			reader.Read(planarData, static_cast<uint64_t>(size)*bytesPerPixel);
 		}
 
 		return imageData;
@@ -69,20 +69,30 @@ namespace
 
 	// ---------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------
-	static ImageDataSection* ReadImageDataSectionRLE(SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height, unsigned int channelCount, unsigned int bytesPerPixel)
+	static ImageDataSection* ReadImageDataSectionRLE(const Document* document, SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height, unsigned int channelCount, unsigned int bytesPerPixel)
 	{
-		// the RLE-compressed data is preceded by a 2-byte data count for each scan line, per channel.
+		// the RLE-compressed data is preceded by a 2/4-byte data count for each scan line, per channel. 
 		// we store the size of the RLE data per channel, and assume a maximum of 256 channels.
 		PSD_ASSERT(channelCount < 256, "Image data section has too many channels (%d).", channelCount);
-		unsigned int channelSize[256] = {};
-		unsigned int totalSize = 0;
+		uint64_t channelSize[256] = {};
+		uint64_t totalSize = 0;
 		for (unsigned int i=0; i < channelCount; ++i)
 		{
-			unsigned int size = 0u;
+			uint64_t size = 0u;
 			for (unsigned int j=0; j < height; ++j)
 			{
-				const uint16_t dataCount = fileUtil::ReadFromFileBE<uint16_t>(reader);
-				size += dataCount;
+				// In the Photoshop file format specification this is mentioned as always being 2 bytes but like the Layer Mask Section
+				// this is variable to 2/4 bytes depending on the version
+				if (document->version == 1)
+				{
+					const uint16_t dataCount = fileUtil::ReadFromFileBE<uint16_t>(reader);
+					size += dataCount;
+				}
+				else if (document->version == 2)
+				{
+					const uint32_t dataCount = fileUtil::ReadFromFileBE<uint32_t>(reader);
+					size += dataCount;
+				}
 			}
 
 			channelSize[i] = size;
@@ -92,7 +102,7 @@ namespace
 		if (totalSize == 0)
 			return nullptr;
 
-		const unsigned int size = width*height;
+		const uint64_t size = width*height;
 		ImageDataSection* imageData = memoryUtil::Allocate<ImageDataSection>(allocator);
 		imageData->imageCount = channelCount;
 		imageData->images = memoryUtil::AllocateArray<PlanarImage>(allocator, channelCount);
@@ -103,7 +113,7 @@ namespace
 			imageData->images[i].data = planarData;
 
 			// read RLE data, and uncompress into planar buffer
-			const unsigned int rleSize = channelSize[i];
+			uint64_t rleSize = channelSize[i];
 			uint8_t* rleData = static_cast<uint8_t*>(allocator->Allocate(rleSize, 4u));
 			reader.Read(rleData, rleSize);
 
@@ -154,7 +164,7 @@ ImageDataSection* ParseImageDataSection(const Document* document, File* file, Al
 	}
 	else if (compressionType == compressionType::RLE)
 	{
-		imageData = ReadImageDataSectionRLE(reader, allocator, width, height, channelCount, bitsPerChannel / 8u);
+		imageData = ReadImageDataSectionRLE(document, reader, allocator, width, height, channelCount, bitsPerChannel / 8u);
 	}
 	else
 	{

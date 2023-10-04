@@ -28,6 +28,7 @@
 #include <cstring>
 
 
+
 PSD_NAMESPACE_BEGIN
 
 namespace
@@ -52,7 +53,7 @@ namespace
 		maskData.bottom = fileUtil::ReadFromFileBE<int32_t>(reader);
 		maskData.right = fileUtil::ReadFromFileBE<int32_t>(reader);
 
-		return 4u*sizeof(int32_t);
+		return 4u * sizeof(int32_t);
 	}
 
 
@@ -249,9 +250,9 @@ namespace
 		PSD_ASSERT_NOT_NULL(src);
 
 		T* data = static_cast<T*>(src);
-		const unsigned int size = width*height;
+		const unsigned int size = width * height;
 
-		for (unsigned int i=0; i < size; ++i)
+		for (unsigned int i = 0; i < size; ++i)
 		{
 			data[i] = endianUtil::BigEndianToNative(data[i]);
 		}
@@ -263,11 +264,11 @@ namespace
 	template <typename T>
 	static void* ReadChannelDataRaw(SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height)
 	{
-		const uint64_t size = width*height;
+		const uint64_t size = width * height;
 		if (size > 0)
 		{
-			void* planarData = allocator->Allocate(size*sizeof(T), 16u);
-			reader.Read(planarData, size*sizeof(T));
+			void* planarData = allocator->Allocate(size * sizeof(T), 16u);
+			reader.Read(planarData, size * sizeof(T));
 
 			EndianConvert<T>(planarData, width, height);
 
@@ -284,10 +285,10 @@ namespace
 	static void* ReadChannelDataRLE(const Document* document, SyncFileReader& reader, Allocator* allocator, unsigned int width, unsigned int height)
 	{
 		// the RLE-compressed data is preceded by a 2/4-byte data count for each scan line depending on which version it is
-		const uint64_t size = width*height;
+		const uint64_t size = static_cast<uint64_t>(width) * static_cast<uint64_t>(height);
 
-		unsigned int rleDataSize = 0u;
-		for (unsigned int i=0; i < height; ++i)
+		uint64_t rleDataSize = 0u;
+		for (unsigned int i = 0; i < height; ++i)
 		{
 			if (document->version == 1)
 			{
@@ -303,13 +304,13 @@ namespace
 
 		if (rleDataSize > 0)
 		{
-			void* planarData = allocator->Allocate(size*sizeof(T), 16u);
+			void* planarData = allocator->Allocate(size * sizeof(T), 16u);
 
 			// decompress RLE
 			void* rleData = allocator->Allocate(rleDataSize, 4u);
 			{
 				reader.Read(rleData, rleDataSize);
-				imageUtil::DecompressRle(static_cast<const uint8_t*>(rleData), rleDataSize, static_cast<uint8_t*>(planarData), width*height*sizeof(T));
+				imageUtil::DecompressRle(static_cast<const uint8_t*>(rleData), rleDataSize, static_cast<uint8_t*>(planarData), width * height * sizeof(T));
 			}
 			allocator->Free(rleData);
 
@@ -329,15 +330,15 @@ namespace
 	{
 		if (channelSize > 0)
 		{
-			const uint64_t size = width*height;
+			const uint64_t size = width * height;
 
-			T* planarData = static_cast<T*>(allocator->Allocate(size*sizeof(T), 16));
+			T* planarData = static_cast<T*>(allocator->Allocate(size * sizeof(T), 16));
 
 			void* zipData = allocator->Allocate(channelSize, 4u);
 			reader.Read(zipData, channelSize);
 
 			// the zipped data stream has a zlib-header
-			const size_t status = tinfl_decompress_mem_to_mem(planarData, size*sizeof(T), zipData, channelSize, TINFL_FLAG_PARSE_ZLIB_HEADER);
+			const size_t status = tinfl_decompress_mem_to_mem(planarData, size * sizeof(T), zipData, channelSize, TINFL_FLAG_PARSE_ZLIB_HEADER);
 			if (status == TINFL_DECOMPRESS_MEM_TO_MEM_FAILED)
 			{
 				PSD_ERROR("PsdExtract", "Error while unzipping channel data.");
@@ -394,11 +395,11 @@ namespace
 		// in-place with the delta-decoding.
 		{
 			uint16_t* buffer = static_cast<uint16_t*>(planarData);
-			for (unsigned int y=0; y < height; ++y)
+			for (unsigned int y = 0; y < height; ++y)
 			{
 				const uint16_t first = *buffer;
 				*buffer++ = endianUtil::BigEndianToNative(first);
-				for (unsigned int x=1; x < width; ++x)
+				for (unsigned int x = 1; x < width; ++x)
 				{
 					buffer[0] = endianUtil::BigEndianToNative(buffer[0]);
 
@@ -422,10 +423,10 @@ namespace
 		// delta-decode row by row first
 		{
 			uint8_t* buffer = static_cast<uint8_t*>(planarData);
-			for (unsigned int y=0; y < height; ++y)
+			for (unsigned int y = 0; y < height; ++y)
 			{
 				++buffer;
-				for (unsigned int x=1; x < width*4; ++x)
+				for (unsigned int x = 1; x < width * 4; ++x)
 				{
 					const uint32_t previous = buffer[-1];
 					const uint32_t current = buffer[0];
@@ -438,21 +439,21 @@ namespace
 
 		// the bytes of the 32-bit float are stored in planar fashion per row, big-endian format.
 		// interleave the bytes, and store them in little-endian format at the same time.
-		uint8_t* rowData = static_cast<uint8_t*>(allocator->Allocate(width*sizeof(float32_t), 16));
+		uint8_t* rowData = static_cast<uint8_t*>(allocator->Allocate(width * sizeof(float32_t), 16));
 		{
 			uint8_t* dest = static_cast<uint8_t*>(planarData);
-			for (unsigned int y=0; y < height; ++y)
+			for (unsigned int y = 0; y < height; ++y)
 			{
 				// copy first row of data to backup storage, because it will be overwritten inside our loop.
 				// note that this operation cannot be done in-place, that's why we work row by row.
-				memcpy(rowData, dest, width*sizeof(float32_t));
+				memcpy(rowData, dest, width * sizeof(float32_t));
 
 				const uint8_t* src0 = rowData;
-				const uint8_t* src1 = rowData + 1*width;
-				const uint8_t* src2 = rowData + 2*width;
-				const uint8_t* src3 = rowData + 3*width;
+				const uint8_t* src1 = rowData + 1 * width;
+				const uint8_t* src2 = rowData + 2 * width;
+				const uint8_t* src3 = rowData + 3 * width;
 
-				for (unsigned int x=0; x < width; ++x)
+				for (unsigned int x = 0; x < width; ++x)
 				{
 					// write data in little-endian format
 					dest[0] = *src3++;
@@ -475,15 +476,15 @@ namespace
 	{
 		if (channelSize > 0)
 		{
-			const uint64_t size = width*height;
+			const uint64_t size = width * height;
 
-			T* planarData = static_cast<T*>(allocator->Allocate(size*sizeof(T), 16));
+			T* planarData = static_cast<T*>(allocator->Allocate(size * sizeof(T), 16));
 
 			void* zipData = allocator->Allocate(channelSize, 4u);
 			reader.Read(zipData, channelSize);
 
 			// the zipped data stream has a zlib-header
-			const size_t status = tinfl_decompress_mem_to_mem(planarData, size*sizeof(T), zipData, channelSize, TINFL_FLAG_PARSE_ZLIB_HEADER);
+			const size_t status = tinfl_decompress_mem_to_mem(planarData, size * sizeof(T), zipData, channelSize, TINFL_FLAG_PARSE_ZLIB_HEADER);
 			if (status == TINFL_DECOMPRESS_MEM_TO_MEM_FAILED)
 			{
 				PSD_ERROR("PsdExtract", "Error while unzipping channel data.");
@@ -513,7 +514,7 @@ namespace
 		layerMaskSection->opacity = 0u;
 		layerMaskSection->kind = 128u;
 		layerMaskSection->hasTransparencyMask = false;
-		
+
 		if (layerLength != 0)
 		{
 			// read the layer count. if it is a negative number, its absolute value is the number of layers and the 
@@ -528,7 +529,7 @@ namespace
 			layerMaskSection->layers = memoryUtil::AllocateArray<Layer>(allocator, layerMaskSection->layerCount);
 
 			// read layer record for each layer
-			for (unsigned int i=0; i < layerMaskSection->layerCount; ++i)
+			for (unsigned int i = 0; i < layerMaskSection->layerCount; ++i)
 			{
 				Layer* layer = &layerMaskSection->layers[i];
 				layer->parent = nullptr;
@@ -549,7 +550,7 @@ namespace
 				layer->channels = memoryUtil::AllocateArray<Channel>(allocator, channelCount);
 
 				// parse each channel
-				for (unsigned int j=0; j < channelCount; ++j)
+				for (unsigned int j = 0; j < channelCount; ++j)
 				{
 					Channel* channel = &layer->channels[j];
 					channel->fileOffset = 0ull;
@@ -662,7 +663,7 @@ namespace
 					reader.Skip(static_cast<uint64_t>(toRead));
 
 					// apply mask data to our own data structures
-					for (unsigned int mask=0; mask < maskCount; ++mask)
+					for (unsigned int mask = 0; mask < maskCount; ++mask)
 					{
 						const bool isVectorMask = maskData[mask].isVectorMask;
 						if (isVectorMask)
@@ -721,22 +722,23 @@ namespace
 					}
 					else if (document->version == 2)
 					{
-						// For the keys LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD we need to evaluate the length section as 8 byte instead of 4
+						// For the keys LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD, cinf we need to evaluate the length section as 8 byte instead of 4
 						if
 							(
-							key == util::Key<'L', 'M', 's', 'k'>::VALUE ||
-							key == util::Key<'L', 'r', '1', '6'>::VALUE ||
-							key == util::Key<'L', 'r', '3', '2'>::VALUE ||
-							key == util::Key<'M', 't', '1', '6'>::VALUE ||
-							key == util::Key<'M', 't', '3', '2'>::VALUE ||
-							key == util::Key<'M', 't', 'r', 'n'>::VALUE ||
-							key == util::Key<'A', 'l', 'p', 'h'>::VALUE ||
-							key == util::Key<'F', 'M', 's', 'k'>::VALUE ||
-							key == util::Key<'l', 'n', 'k', '2'>::VALUE ||
-							key == util::Key<'F', 'E', 'i', 'd'>::VALUE ||
-							key == util::Key<'F', 'X', 'i', 'd'>::VALUE ||
-							key == util::Key<'P', 'x', 'S', 'D'>::VALUE
-							)
+								key == util::Key<'L', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'L', 'r', '1', '6'>::VALUE ||
+								key == util::Key<'L', 'r', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', '1', '6'>::VALUE ||
+								key == util::Key<'M', 't', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', 'r', 'n'>::VALUE ||
+								key == util::Key<'A', 'l', 'p', 'h'>::VALUE ||
+								key == util::Key<'F', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'l', 'n', 'k', '2'>::VALUE ||
+								key == util::Key<'F', 'E', 'i', 'd'>::VALUE ||
+								key == util::Key<'F', 'X', 'i', 'd'>::VALUE ||
+								key == util::Key<'P', 'x', 'S', 'D'>::VALUE ||
+								key == util::Key<'c', 'i', 'n', 'f'>::VALUE
+								)
 						{
 							length = fileUtil::ReadFromFileBE<uint64_t>(reader);
 							length = bitUtil::RoundUpToMultiple<uint64_t>(length, 2u);
@@ -778,7 +780,7 @@ namespace
 						reader.Skip(length);
 					}
 
-					toRead -= 3*sizeof(uint32_t) + length;
+					toRead -= 3 * sizeof(uint32_t) + length;
 
 					// If we read any of the below keys in a PSB we must subtract another uint32_t as the length section is uint64_t rather than uint32_t
 					if (document->version == 2)
@@ -796,7 +798,8 @@ namespace
 								key == util::Key<'l', 'n', 'k', '2'>::VALUE ||
 								key == util::Key<'F', 'E', 'i', 'd'>::VALUE ||
 								key == util::Key<'F', 'X', 'i', 'd'>::VALUE ||
-								key == util::Key<'P', 'x', 'S', 'D'>::VALUE
+								key == util::Key<'P', 'x', 'S', 'D'>::VALUE ||
+								key == util::Key<'c', 'i', 'n', 'f'>::VALUE		// Documentation doesnt mention that this also is 8 bytes but through testing it appears this is the case
 								)
 						{
 							toRead -= sizeof(uint32_t);
@@ -807,11 +810,11 @@ namespace
 
 			// walk through the layers and channels, but don't extract their data just yet. only save the file offset for extracting the
 			// data later.
-			for (unsigned int i=0; i < layerMaskSection->layerCount; ++i)
+			for (unsigned int i = 0; i < layerMaskSection->layerCount; ++i)
 			{
 				Layer* layer = &layerMaskSection->layers[i];
 				const unsigned int channelCount = layer->channelCount;
-				for (unsigned int j=0; j < channelCount; ++j)
+				for (unsigned int j = 0; j < channelCount; ++j)
 				{
 					Channel* channel = &layer->channels[j];
 					channel->fileOffset = reader.GetPosition();
@@ -823,8 +826,16 @@ namespace
 		if (sectionLength > 0)
 		{
 			// start loading at the global layer mask info section, located after the Layer Information Section.
-			// note that the 4 bytes that stored the length of the section are not included in the length itself.
-			const uint64_t globalInfoSectionOffset = sectionOffset + layerLength + 4u;
+			// note that the 4/8 bytes that stored the length of the section are not included in the length itself.
+			uint64_t globalInfoSectionOffset = 0;
+			if (document->version == 1)
+			{
+				globalInfoSectionOffset = sectionOffset + layerLength + 4u;
+			}
+			else if (document->version == 2)
+			{
+				globalInfoSectionOffset = sectionOffset + layerLength + 8u;
+			}
 			reader.SetPosition(globalInfoSectionOffset);
 
 			// work out how many bytes are left to read at this point. we need that to figure out the size of the last
@@ -845,10 +856,10 @@ namespace
 					layerMaskSection->opacity = fileUtil::ReadFromFileBE<uint16_t>(reader);
 					layerMaskSection->kind = fileUtil::ReadFromFileBE<uint8_t>(reader);
 
-					toRead -= 2u*sizeof(uint16_t) + sizeof(uint8_t) + 8u;
+					toRead -= 2u * sizeof(uint16_t) + sizeof(uint8_t) + 8u;
 
 					// filler bytes (zeroes)
-					const uint32_t remaining = globalLayerMaskLength - 2u*sizeof(uint16_t) - sizeof(uint8_t) - 8u;
+					const uint32_t remaining = globalLayerMaskLength - 2u * sizeof(uint16_t) - sizeof(uint8_t) - 8u;
 					reader.Skip(remaining);
 
 					toRead -= remaining;
@@ -858,17 +869,49 @@ namespace
 				while (toRead > 0)
 				{
 					const uint32_t signature = fileUtil::ReadFromFileBE<uint32_t>(reader);
-					if (signature != util::Key<'8', 'B', 'I', 'M'>::VALUE)
+					if (signature != util::Key<'8', 'B', 'I', 'M'>::VALUE && signature != util::Key<'8', 'B', '6', '4'>::VALUE)
 					{
-						PSD_ERROR("AdditionalLayerInfo", "Additional Layer Information section seems to be corrupt, signature does not match \"8BIM\".");
+						PSD_ERROR("AdditionalLayerInfo", "Additional Layer Information section seems to be corrupt, signature does not match \"8BIM\" or \"8B64\".");
 						return layerMaskSection;
 					}
 
 					const uint32_t key = fileUtil::ReadFromFileBE<uint32_t>(reader);
 
 					// again, length is rounded to a multiple of 4
-					uint32_t length = fileUtil::ReadFromFileBE<uint32_t>(reader);
-					length = bitUtil::RoundUpToMultiple(length, 4u);
+					uint64_t length = 0;
+					if (document->version == 1)
+					{
+						length = fileUtil::ReadFromFileBE<uint32_t>(reader);
+					}
+					else if (document->version == 2)
+					{
+						// For the keys LMsk, Lr16, Lr32, Layr, Mt16, Mt32, Mtrn, Alph, FMsk, lnk2, FEid, FXid, PxSD, cinf we need to evaluate the length section as 8 byte instead of 4
+						if (
+								key == util::Key<'L', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'L', 'r', '1', '6'>::VALUE ||
+								key == util::Key<'L', 'r', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', '1', '6'>::VALUE ||
+								key == util::Key<'M', 't', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', 'r', 'n'>::VALUE ||
+								key == util::Key<'A', 'l', 'p', 'h'>::VALUE ||
+								key == util::Key<'F', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'l', 'n', 'k', '2'>::VALUE ||
+								key == util::Key<'F', 'E', 'i', 'd'>::VALUE ||
+								key == util::Key<'F', 'X', 'i', 'd'>::VALUE ||
+								key == util::Key<'P', 'x', 'S', 'D'>::VALUE ||
+								key == util::Key<'c', 'i', 'n', 'f'>::VALUE		// Documentation doesnt mention that this also is 8 bytes but through testing it appears this is the case
+							)
+						{
+							length = fileUtil::ReadFromFileBE<uint64_t>(reader);
+						}
+						else
+						{
+							length = fileUtil::ReadFromFileBE<uint32_t>(reader);
+						}
+					}
+
+					// Documentation mentions this is rounded to an even number but it appears that its rounded to a multiple of 4
+					length = bitUtil::RoundUpToMultiple<uint64_t>(length, 4u);
 
 					if (key == util::Key<'L', 'r', '1', '6'>::VALUE)
 					{
@@ -899,7 +942,30 @@ namespace
 						reader.Skip(length);
 					}
 
-					toRead -= 3u*sizeof(uint32_t) + length;
+					toRead -= 3u * sizeof(uint32_t) + length;
+
+					// If we read any of the below keys in a PSB we must subtract another uint32_t as the length section is uint64_t rather than uint32_t
+					if (document->version == 2)
+					{
+						if (
+								key == util::Key<'L', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'L', 'r', '1', '6'>::VALUE ||
+								key == util::Key<'L', 'r', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', '1', '6'>::VALUE ||
+								key == util::Key<'M', 't', '3', '2'>::VALUE ||
+								key == util::Key<'M', 't', 'r', 'n'>::VALUE ||
+								key == util::Key<'A', 'l', 'p', 'h'>::VALUE ||
+								key == util::Key<'F', 'M', 's', 'k'>::VALUE ||
+								key == util::Key<'l', 'n', 'k', '2'>::VALUE ||
+								key == util::Key<'F', 'E', 'i', 'd'>::VALUE ||
+								key == util::Key<'F', 'X', 'i', 'd'>::VALUE ||
+								key == util::Key<'P', 'x', 'S', 'D'>::VALUE ||
+								key == util::Key<'c', 'i', 'n', 'f'>::VALUE
+							)
+						{
+							toRead -= sizeof(uint32_t);
+						}
+					}
 				}
 			}
 		}

@@ -15,13 +15,13 @@ namespace imageUtil
 {
 	// ---------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------
-	void DecompressRle(const uint8_t* PSD_RESTRICT src, unsigned int srcSize, uint8_t* PSD_RESTRICT dest, unsigned int size)
+	void DecompressRle(const uint8_t* PSD_RESTRICT src, uint64_t srcSize, uint8_t* PSD_RESTRICT dest, unsigned int size)
 	{
 		PSD_ASSERT_NOT_NULL(src);
 		PSD_ASSERT_NOT_NULL(dest);
 
-		unsigned int bytesRead = 0u;
-		unsigned int offset = 0u;
+		uint64_t bytesRead = 0u;
+		uint64_t offset = 0u;
 		while (offset < size)
 		{
 			if (bytesRead >= srcSize)
